@@ -49,12 +49,24 @@ function Kader() {
       </form>
       <ul className="mt-4 grid gap-2">
         {sorted.length === 0 && <p className="text-center text-muted-foreground">Noch keine Spieler im Kader.</p>}
-        {sorted.map((p) => (
+        {sorted.map((p) => {
+          const s = stats.find((x) => x.p.id === p.id);
+          return (
           <li key={p.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary font-display text-2xl text-primary-foreground">{p.number}</span>
             <div className="flex-1">
               <p className="font-semibold">{p.name}</p>
               <p className="text-sm text-muted-foreground">{p.position}</p>
+              {s && (
+                <div className="mt-1 flex flex-wrap gap-x-3 text-xs">
+                  <span>{s.games} Spiele</span>
+                  <span className="text-success">{s.pts} Pkt</span>
+                  <span>{s.kills} Angriff</span>
+                  <span>{s.aces} Asse</span>
+                  <span>{s.blocks} Blocks</span>
+                  <span className="text-destructive">{s.err} Fehler</span>
+                </div>
+              )}
             </div>
             <button aria-label={`${p.name} löschen`} onClick={() => confirm(`${p.name} löschen?`) && setPlayers(players.filter((x) => x.id !== p.id))} className="rounded-lg p-2 text-destructive hover:bg-muted">
               <Trash2 className="h-5 w-5" />
