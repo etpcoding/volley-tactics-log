@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-export type Player = { id: string; name: string; number: number; position: string };
+export type Player = { id: string; name: string; number: number; position: string; team?: string };
 export type MatchEvent = {
   id: string;
   set: number;
@@ -77,7 +77,12 @@ export function allMatches(current: Match, history: Match[]): Match[] {
   return current.events.length ? [current, ...list] : list;
 }
 
-export type Club = { name: string; teams: string[]; season: string };
+/** Players of one team; without a team name, returns everyone. */
+export function teamPlayers(players: Player[], team?: string): Player[] {
+  return team ? players.filter((p) => p.team === team) : players;
+}
+
+export type Club = { name: string; teams: string[]; season: string; activeTeam?: string };
 export const defaultSeason = () => {
   const d = new Date();
   const y = d.getMonth() >= 6 ? d.getFullYear() : d.getFullYear() - 1;
