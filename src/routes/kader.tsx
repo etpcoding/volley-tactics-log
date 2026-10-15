@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
-import { useStored, uid, POSITIONS, EMPTY_PLAYERS, EMPTY_MATCH, EMPTY_HISTORY, allMatches, type Player, type Match } from "@/lib/store";
+import { useStored, write, uid, EMPTY_CLUB, defaultSeason, type Club, POSITIONS, EMPTY_PLAYERS, EMPTY_MATCH, EMPTY_HISTORY, allMatches, type Player, type Match } from "@/lib/store";
 import { playerStats } from "@/lib/stats";
+import { setsWon } from "@/lib/volley";
 
 export const Route = createFileRoute("/kader")({
   head: () => ({
@@ -125,6 +126,36 @@ function Kader() {
           );
         })}
       </ul>
+
+      <h2 className="mt-6 text-3xl">Spieltage-Archiv</h2>
+      {seasons.map((s) => {
+        const list = history.filter((m) => (m.season ?? season) === s);
+        if (!list.length) return null;
+        return (
+          <div key={s} className="mt-2 rounded-xl border border-border bg-card p-3">
+            <p className="font-semibold">Saison {s} · {list.length} Spiele · {list.filter((m) => { const w = setsWon(m.events, m.set); return w.us > w.them; }).length} Siege</p>
+            <ul className="mt-1 grid gap-1 text-sm">
+              {list.map((m) => { const w = setsWon(m.events, m.set); return (
+                <li key={m.id} className="flex items-center gap-2">
+                  <span className="text-muted-foreground">{m.date ? new Date(m.date).toLocaleDateString("de-DE") : ""}</span>
+                  <span className="flex-1">{m.team || "Team"} – {m.opponent || "Gegner"}</span>
+                  <b className={w.us > w.them ? "text-success" : "text-destructive"}>{w.us}:{w.them}</b>
+                  <button aria-label="Spiel löschen" className="p-1 text-destructive" onClick={() => confirm("Spiel aus dem Archiv löschen?") && setHistory(history.filter((x) => x.id !== m.id))}><Trash2 className="h-4 w-4" /></button>
+                </li>
+              ); })}
+            </ul>
+          </div>
+        );
+      })}
+      {history.length === 0 && <p className="mt-2 text-muted-foreground">Noch keine beendeten Spiele.</p>}
+
+      <div className="mt-6 grid gap-2 rounded-xl border border-border bg-card p-4">
+        <p className="text-sm text-muted-foreground">Sichere alle Daten (Verein, Kader, Spiele, Taktik) als Datei, um sie über Jahre aufzubewahren oder auf ein anderes Gerät zu übertragen.</p>
+        <div className="flex gap-2">
+          <button className="btn flex-1" onClick={exportData}>Sicherung herunterladen</button>
+          <label className="chip flex flex-1 cursor-pointer items-center justify-center">Sicherung laden<input type="file" accept="application/json" className="hidden" onChange={(e) => importData(e.target.files?.[0])} /></label>
+        </div>
+      </div>
     </div>
   );
 }
