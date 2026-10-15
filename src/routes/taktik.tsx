@@ -23,7 +23,7 @@ const BASE: [number, number][] = [[80, 88], [80, 62], [50, 62], [20, 62], [20, 8
 function defaultTokens(players: Player[]): Token[] {
   const us = BASE.map(([x, y], i) => ({
     id: uid(), team: "us" as const, x, y,
-    label: players[i] ? String(players[i].number) : ["I", "II", "III", "IV", "V", "VI"][i],
+    label: players[i] ? String(players[i].number) : ["I", "II", "III", "IV", "V", "VI"][i] ?? "",
   }));
   const them = BASE.map(([x, y], i) => ({ id: uid(), team: "them" as const, x: 100 - x, y: 100 - y, label: String(i + 1) }));
   return [...us, ...them];
