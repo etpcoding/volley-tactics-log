@@ -45,7 +45,7 @@ function Auswertung() {
       <select className="field mt-3" value={sel} onChange={(e) => setSel(e.target.value)}>
         {matches.map((x, i) => {
           const w = setsWon(x.events, x.set);
-          return <option key={x.id ?? i} value={i}>{x.opponent || "Gegner"} · {w.us}:{w.them}{x.finished ? "" : " (läuft)"}{x.date ? ` · ${new Date(x.date).toLocaleDateString("de-DE")}` : ""}</option>;
+          return <option key={x.id ?? i} value={i}>{x.team ? `${x.team} – ` : ""}{x.opponent || "Gegner"} · {x.season ? `${x.season} · ` : ""}{w.us}:{w.them}{x.finished ? "" : " (läuft)"}{x.date ? ` · ${new Date(x.date).toLocaleDateString("de-DE")}` : ""}</option>;
         })}
       </select>
 

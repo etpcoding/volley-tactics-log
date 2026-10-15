@@ -27,6 +27,8 @@ function Spieltag() {
   const [players] = useStored<Player[]>("vb-players", EMPTY_PLAYERS);
   const [match, setMatchRaw] = useStored<Match>("vb-match", EMPTY_MATCH);
   const [history, setHistory] = useStored<Match[]>("vb-history", EMPTY_HISTORY);
+  const [club] = useStored<Club>("vb-club", EMPTY_CLUB);
+  const season = club.season || defaultSeason();
   const [mode, setMode] = useState<Mode>(null);
   const [playerId, setPlayerId] = useState<string>();
   const [how, setHow] = useState<string>();
@@ -37,7 +39,7 @@ function Spieltag() {
   const onCourt = roster.length ? players.filter((p) => roster.includes(p.id)) : players;
 
   const setMatch = (m: Match) => {
-    const withId = m.id ? m : { ...m, id: uid(), date: Date.now() };
+    const withId = m.id ? m : { ...m, id: uid(), date: Date.now(), season };
     setMatchRaw(withId);
     const rest = history.filter((h) => h.id !== withId.id);
     if (withId.finished) setHistory([withId, ...rest]);
@@ -70,8 +72,18 @@ function Spieltag() {
 
   return (
     <div>
-      <div className="flex gap-2">
-        <input className="field" placeholder="Gegner" value={match.opponent} onChange={(e) => setMatch({ ...match, opponent: e.target.value })} />
+      <div className="rounded-xl border border-border bg-card p-4">
+        <p className="text-sm text-muted-foreground">{club.name || "Mein Verein"} · Saison {match.season ?? season}</p>
+        <p className="mt-2 mb-1 text-sm font-semibold text-muted-foreground">Unser Team</p>
+        {club.teams.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {club.teams.map((t) => <Chip key={t} on={match.team === t} onClick={() => setMatch({ ...match, team: t })}>{t}</Chip>)}
+          </div>
+        ) : (
+          <input className="field" placeholder="z. B. Herren 1 (Teams im Kader anlegen)" value={match.team ?? ""} onChange={(e) => setMatch({ ...match, team: e.target.value })} />
+        )}
+        <p className="mt-2 mb-1 text-sm font-semibold text-muted-foreground">Gegner</p>
+        <input className="field" placeholder="Name des gegnerischen Teams" value={match.opponent} onChange={(e) => setMatch({ ...match, opponent: e.target.value })} />
       </div>
 
       {match.events.length === 0 && players.length > 0 && (
