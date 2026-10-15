@@ -6,9 +6,9 @@ export type MatchEvent = {
   set: number;
   side: "us" | "them";
   kind: "point" | "error" | "opp";
-  playerId?: string;
-  how?: string;
-  technique?: string;
+  playerId?: string | undefined;
+  how?: string | undefined;
+  technique?: string | undefined;
   at: number;
 };
 export type Match = { opponent: string; set: number; events: MatchEvent[] };

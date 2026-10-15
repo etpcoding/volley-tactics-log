@@ -21,7 +21,7 @@ function Kader() {
   const [players, setPlayers] = useStored<Player[]>("vb-players", EMPTY_PLAYERS);
   const [name, setName] = useState("");
   const [number, setNumber] = useState("");
-  const [position, setPosition] = useState(POSITIONS[1]);
+  const [position, setPosition] = useState<string>(POSITIONS[1] ?? "Außenangriff");
 
   const add = (e: React.FormEvent) => {
     e.preventDefault();
