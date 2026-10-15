@@ -1,24 +1,42 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Users, Shapes, Trophy } from "lucide-react";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Volley Coach – Dein Volleyball-Teamassistent" },
+      { name: "description", content: "Kaderübersicht, Taktikboard und Live-Punkteerfassung für Volleyballtrainer." },
+      { property: "og:title", content: "Volley Coach" },
+      { property: "og:description", content: "Kader, Taktik und Spieltag-Statistik für dein Volleyballteam." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
+const mods = [
+  { to: "/kader", title: "Kader", text: "Spieler hinzufügen, Positionen & Nummern verwalten.", icon: Users },
+  { to: "/taktik", title: "Taktik", text: "Aufstellungen auf dem Feld planen und Spielzüge besprechen.", icon: Shapes },
+  { to: "/spieltag", title: "Spieltag", text: "Punkte, Fehler und Angriffstechniken live erfassen.", icon: Trophy },
+] as const;
+
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div>
+      <p className="text-sm font-semibold uppercase tracking-widest text-primary">Volley Coach</p>
+      <h1 className="mt-1 text-6xl leading-none">Dein Team.<br />Dein Spiel.</h1>
+      <div className="mt-8 grid gap-3">
+        {mods.map((m) => (
+          <Link key={m.to} to={m.to} className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 transition hover:border-primary">
+            <div className="rounded-lg bg-primary p-3 text-primary-foreground"><m.icon className="h-6 w-6" /></div>
+            <div>
+              <h2 className="text-2xl">{m.title}</h2>
+              <p className="text-sm text-muted-foreground">{m.text}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
