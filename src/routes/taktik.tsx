@@ -50,8 +50,8 @@ function Taktik() {
 
   const rotate = () => {
     const us = t.filter((k) => k.team === "us");
-    const labels = us.map((k) => k.label);
-    const rotated = us.map((k, i) => ({ ...k, label: labels[(i + 1) % 6], x: BASE[i][0], y: BASE[i][1] }));
+    const labels: string[] = us.map((k) => k.label);
+    const rotated = us.map((k, i) => ({ ...k, label: labels[(i + 1) % 6] ?? k.label, x: BASE[i]?.[0] ?? k.x, y: BASE[i]?.[1] ?? k.y }));
     setTokens([...rotated, ...t.filter((k) => k.team === "them")]);
   };
 
