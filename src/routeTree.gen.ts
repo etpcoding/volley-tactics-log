@@ -10,33 +10,63 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as KaderRouteImport } from './routes/kader'
+import { Route as SpieltagRouteImport } from './routes/spieltag'
+import { Route as TaktikRouteImport } from './routes/taktik'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KaderRoute = KaderRouteImport.update({
+  id: '/kader',
+  path: '/kader',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpieltagRoute = SpieltagRouteImport.update({
+  id: '/spieltag',
+  path: '/spieltag',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TaktikRoute = TaktikRouteImport.update({
+  id: '/taktik',
+  path: '/taktik',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/kader': typeof KaderRoute
+  '/spieltag': typeof SpieltagRoute
+  '/taktik': typeof TaktikRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/kader': typeof KaderRoute
+  '/spieltag': typeof SpieltagRoute
+  '/taktik': typeof TaktikRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/kader': typeof KaderRoute
+  '/spieltag': typeof SpieltagRoute
+  '/taktik': typeof TaktikRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/kader' | '/spieltag' | '/taktik'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/kader' | '/spieltag' | '/taktik'
+  id: '__root__' | '/' | '/kader' | '/spieltag' | '/taktik'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  KaderRoute: typeof KaderRoute
+  SpieltagRoute: typeof SpieltagRoute
+  TaktikRoute: typeof TaktikRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +78,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kader': {
+      id: '/kader'
+      path: '/kader'
+      fullPath: '/kader'
+      preLoaderRoute: typeof KaderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spieltag': {
+      id: '/spieltag'
+      path: '/spieltag'
+      fullPath: '/spieltag'
+      preLoaderRoute: typeof SpieltagRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/taktik': {
+      id: '/taktik'
+      path: '/taktik'
+      fullPath: '/taktik'
+      preLoaderRoute: typeof TaktikRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  KaderRoute: KaderRoute,
+  SpieltagRoute: SpieltagRoute,
+  TaktikRoute: TaktikRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
