@@ -76,6 +76,7 @@ const tabs = [
   { to: "/kader", label: "Kader", icon: Users },
   { to: "/taktik", label: "Taktik", icon: Shapes },
   { to: "/spieltag", label: "Spieltag", icon: Trophy },
+  { to: "/auswertung", label: "Auswertung", icon: BarChart3 },
 ] as const;
 
 function RootComponent() {

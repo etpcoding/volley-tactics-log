@@ -11,9 +11,18 @@ export type MatchEvent = {
   technique?: string | undefined;
   at: number;
 };
-export type Match = { opponent: string; set: number; events: MatchEvent[] };
-export type Token = { id: string; label: string; x: number; y: number; team: "us" | "them" };
-export type Play = { id: string; name: string; notes: string; tokens: Token[] };
+export type Match = {
+  id?: string;
+  opponent: string;
+  set: number;
+  events: MatchEvent[];
+  roster?: string[];
+  timeouts?: { set: number; side: "us" | "them" }[];
+  finished?: boolean;
+  date?: number;
+};
+export type Token = { id: string; label: string; x: number; y: number; team: "us" | "them"; playerId?: string };
+export type Play = { id: string; name: string; notes: string; tokens: Token[]; system?: string; rotation?: number };
 
 const cache = new Map<string, unknown>();
 const listeners = new Set<() => void>();
@@ -58,3 +67,10 @@ export const ERRORS = ["Aufschlagfehler", "Annahmefehler", "Angriff ins Aus", "A
 export const EMPTY_PLAYERS: Player[] = [];
 export const EMPTY_MATCH: Match = { opponent: "", set: 1, events: [] };
 export const EMPTY_PLAYS: Play[] = [];
+export const EMPTY_HISTORY: Match[] = [];
+
+/** Current match (if it has events) plus all finished matches, newest first, without duplicates. */
+export function allMatches(current: Match, history: Match[]): Match[] {
+  const list = history.filter((h) => h.id !== current.id);
+  return current.events.length ? [current, ...list] : list;
+}
