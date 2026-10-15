@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
-import { useStored, uid, POSITIONS, EMPTY_PLAYERS, EMPTY_MATCH, EMPTY_HISTORY, allMatches, type Player, type Match } from "@/lib/store";
+import { useStored, write, uid, EMPTY_CLUB, defaultSeason, type Club, POSITIONS, EMPTY_PLAYERS, EMPTY_MATCH, EMPTY_HISTORY, allMatches, type Player, type Match } from "@/lib/store";
 import { playerStats } from "@/lib/stats";
+import { setsWon } from "@/lib/volley";
 
 export const Route = createFileRoute("/kader")({
   head: () => ({
@@ -33,12 +34,58 @@ function Kader() {
 
   const sorted = [...players].sort((a, b) => a.number - b.number);
   const [current] = useStored<Match>("vb-match", EMPTY_MATCH);
-  const [history] = useStored<Match[]>("vb-history", EMPTY_HISTORY);
-  const stats = playerStats(players, allMatches(current, history));
+  const [history, setHistory] = useStored<Match[]>("vb-history", EMPTY_HISTORY);
+  const [club, setClub] = useStored<Club>("vb-club", EMPTY_CLUB);
+  const [teamName, setTeamName] = useState("");
+  const [seasonFilter, setSeasonFilter] = useState("alle");
+  const season = club.season || defaultSeason();
+  const all = allMatches(current, history);
+  const seasons = [...new Set([season, ...all.map((m) => m.season ?? season)])].sort().reverse();
+  const filtered = seasonFilter === "alle" ? all : all.filter((m) => (m.season ?? season) === seasonFilter);
+  const stats = playerStats(players, filtered);
+
+  const exportData = () => {
+    const keys = ["vb-club", "vb-players", "vb-history", "vb-plays", "vb-match"];
+    const data = Object.fromEntries(keys.map((k) => [k, JSON.parse(localStorage.getItem(k) ?? "null")]));
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+    a.download = `volley-coach-${(club.name || "verein").replace(/\s+/g, "-")}-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+  };
+  const importData = async (f?: File) => {
+    if (!f || !confirm("Sicherung laden? Die aktuellen Daten werden ersetzt.")) return;
+    const data = JSON.parse(await f.text()) as Record<string, unknown>;
+    Object.entries(data).forEach(([k, v]) => v !== null && k.startsWith("vb-") && write(k, v));
+  };
 
   return (
     <div>
-      <h1 className="text-5xl">Kader <span className="text-primary">{players.length}</span></h1>
+      <div className="rounded-xl border border-border bg-card p-4">
+        <p className="mb-1 text-sm font-semibold text-muted-foreground">Verein</p>
+        <input className="field" placeholder="Vereinsname" value={club.name} onChange={(e) => setClub({ ...club, name: e.target.value })} />
+        <div className="mt-2 flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Aktuelle Saison</span>
+          <input className="field w-28" value={season} onChange={(e) => setClub({ ...club, season: e.target.value })} />
+        </div>
+        <p className="mt-3 mb-1 text-sm font-semibold text-muted-foreground">Teams</p>
+        <div className="flex flex-wrap gap-2">
+          {club.teams.map((t) => (
+            <button key={t} className="chip" onClick={() => confirm(`Team „${t}“ entfernen?`) && setClub({ ...club, teams: club.teams.filter((x) => x !== t) })}>{t} ✕</button>
+          ))}
+        </div>
+        <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); const t = teamName.trim(); if (t && !club.teams.includes(t)) setClub({ ...club, teams: [...club.teams, t] }); setTeamName(""); }}>
+          <input className="field" placeholder="z. B. Herren 1, Damen 2" value={teamName} onChange={(e) => setTeamName(e.target.value)} />
+          <button className="btn" disabled={!teamName.trim()}>+</button>
+        </form>
+      </div>
+
+      <h1 className="mt-6 text-5xl">{club.name ? `${club.name} – ` : ""}Kader <span className="text-primary">{players.length}</span></h1>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground">Statistik:</span>
+        {["alle", ...seasons].map((s) => (
+          <button key={s} className={`chip ${seasonFilter === s ? "chip-on" : ""}`} onClick={() => setSeasonFilter(s)}>{s === "alle" ? "Alle Saisons" : s}</button>
+        ))}
+      </div>
       <form onSubmit={add} className="mt-4 grid gap-2 rounded-xl border border-border bg-card p-4">
         <div className="flex gap-2">
           <input className="field w-20" placeholder="Nr." inputMode="numeric" value={number} onChange={(e) => setNumber(e.target.value)} />
@@ -79,6 +126,36 @@ function Kader() {
           );
         })}
       </ul>
+
+      <h2 className="mt-6 text-3xl">Spieltage-Archiv</h2>
+      {seasons.map((s) => {
+        const list = history.filter((m) => (m.season ?? season) === s);
+        if (!list.length) return null;
+        return (
+          <div key={s} className="mt-2 rounded-xl border border-border bg-card p-3">
+            <p className="font-semibold">Saison {s} · {list.length} Spiele · {list.filter((m) => { const w = setsWon(m.events, m.set); return w.us > w.them; }).length} Siege</p>
+            <ul className="mt-1 grid gap-1 text-sm">
+              {list.map((m) => { const w = setsWon(m.events, m.set); return (
+                <li key={m.id} className="flex items-center gap-2">
+                  <span className="text-muted-foreground">{m.date ? new Date(m.date).toLocaleDateString("de-DE") : ""}</span>
+                  <span className="flex-1">{m.team || "Team"} – {m.opponent || "Gegner"}</span>
+                  <b className={w.us > w.them ? "text-success" : "text-destructive"}>{w.us}:{w.them}</b>
+                  <button aria-label="Spiel löschen" className="p-1 text-destructive" onClick={() => confirm("Spiel aus dem Archiv löschen?") && setHistory(history.filter((x) => x.id !== m.id))}><Trash2 className="h-4 w-4" /></button>
+                </li>
+              ); })}
+            </ul>
+          </div>
+        );
+      })}
+      {history.length === 0 && <p className="mt-2 text-muted-foreground">Noch keine beendeten Spiele.</p>}
+
+      <div className="mt-6 grid gap-2 rounded-xl border border-border bg-card p-4">
+        <p className="text-sm text-muted-foreground">Sichere alle Daten (Verein, Kader, Spiele, Taktik) als Datei, um sie über Jahre aufzubewahren oder auf ein anderes Gerät zu übertragen.</p>
+        <div className="flex gap-2">
+          <button className="btn flex-1" onClick={exportData}>Sicherung herunterladen</button>
+          <label className="chip flex flex-1 cursor-pointer items-center justify-center">Sicherung laden<input type="file" accept="application/json" className="hidden" onChange={(e) => importData(e.target.files?.[0])} /></label>
+        </div>
+      </div>
     </div>
   );
 }
