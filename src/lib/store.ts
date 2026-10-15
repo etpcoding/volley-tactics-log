@@ -20,6 +20,8 @@ export type Match = {
   timeouts?: { set: number; side: "us" | "them" }[];
   finished?: boolean;
   date?: number;
+  team?: string;
+  season?: string;
 };
 export type Token = { id: string; label: string; x: number; y: number; team: "us" | "them"; playerId?: string };
 export type Play = { id: string; name: string; notes: string; tokens: Token[]; system?: string; rotation?: number };
@@ -74,3 +76,11 @@ export function allMatches(current: Match, history: Match[]): Match[] {
   const list = history.filter((h) => h.id !== current.id);
   return current.events.length ? [current, ...list] : list;
 }
+
+export type Club = { name: string; teams: string[]; season: string };
+export const defaultSeason = () => {
+  const d = new Date();
+  const y = d.getMonth() >= 6 ? d.getFullYear() : d.getFullYear() - 1;
+  return `${y}/${String(y + 1).slice(2)}`;
+};
+export const EMPTY_CLUB: Club = { name: "", teams: [], season: "" };
