@@ -33,12 +33,58 @@ function Kader() {
 
   const sorted = [...players].sort((a, b) => a.number - b.number);
   const [current] = useStored<Match>("vb-match", EMPTY_MATCH);
-  const [history] = useStored<Match[]>("vb-history", EMPTY_HISTORY);
-  const stats = playerStats(players, allMatches(current, history));
+  const [history, setHistory] = useStored<Match[]>("vb-history", EMPTY_HISTORY);
+  const [club, setClub] = useStored<Club>("vb-club", EMPTY_CLUB);
+  const [teamName, setTeamName] = useState("");
+  const [seasonFilter, setSeasonFilter] = useState("alle");
+  const season = club.season || defaultSeason();
+  const all = allMatches(current, history);
+  const seasons = [...new Set([season, ...all.map((m) => m.season ?? season)])].sort().reverse();
+  const filtered = seasonFilter === "alle" ? all : all.filter((m) => (m.season ?? season) === seasonFilter);
+  const stats = playerStats(players, filtered);
+
+  const exportData = () => {
+    const keys = ["vb-club", "vb-players", "vb-history", "vb-plays", "vb-match"];
+    const data = Object.fromEntries(keys.map((k) => [k, JSON.parse(localStorage.getItem(k) ?? "null")]));
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+    a.download = `volley-coach-${(club.name || "verein").replace(/\s+/g, "-")}-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+  };
+  const importData = async (f?: File) => {
+    if (!f || !confirm("Sicherung laden? Die aktuellen Daten werden ersetzt.")) return;
+    const data = JSON.parse(await f.text()) as Record<string, unknown>;
+    Object.entries(data).forEach(([k, v]) => v !== null && k.startsWith("vb-") && write(k, v));
+  };
 
   return (
     <div>
-      <h1 className="text-5xl">Kader <span className="text-primary">{players.length}</span></h1>
+      <div className="rounded-xl border border-border bg-card p-4">
+        <p className="mb-1 text-sm font-semibold text-muted-foreground">Verein</p>
+        <input className="field" placeholder="Vereinsname" value={club.name} onChange={(e) => setClub({ ...club, name: e.target.value })} />
+        <div className="mt-2 flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Aktuelle Saison</span>
+          <input className="field w-28" value={season} onChange={(e) => setClub({ ...club, season: e.target.value })} />
+        </div>
+        <p className="mt-3 mb-1 text-sm font-semibold text-muted-foreground">Teams</p>
+        <div className="flex flex-wrap gap-2">
+          {club.teams.map((t) => (
+            <button key={t} className="chip" onClick={() => confirm(`Team „${t}“ entfernen?`) && setClub({ ...club, teams: club.teams.filter((x) => x !== t) })}>{t} ✕</button>
+          ))}
+        </div>
+        <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); const t = teamName.trim(); if (t && !club.teams.includes(t)) setClub({ ...club, teams: [...club.teams, t] }); setTeamName(""); }}>
+          <input className="field" placeholder="z. B. Herren 1, Damen 2" value={teamName} onChange={(e) => setTeamName(e.target.value)} />
+          <button className="btn" disabled={!teamName.trim()}>+</button>
+        </form>
+      </div>
+
+      <h1 className="mt-6 text-5xl">{club.name ? `${club.name} – ` : ""}Kader <span className="text-primary">{players.length}</span></h1>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground">Statistik:</span>
+        {["alle", ...seasons].map((s) => (
+          <button key={s} className={`chip ${seasonFilter === s ? "chip-on" : ""}`} onClick={() => setSeasonFilter(s)}>{s === "alle" ? "Alle Saisons" : s}</button>
+        ))}
+      </div>
       <form onSubmit={add} className="mt-4 grid gap-2 rounded-xl border border-border bg-card p-4">
         <div className="flex gap-2">
           <input className="field w-20" placeholder="Nr." inputMode="numeric" value={number} onChange={(e) => setNumber(e.target.value)} />
