@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Undo2, Timer } from "lucide-react";
 import {
-  useStored, uid, EMPTY_PLAYERS, EMPTY_MATCH, EMPTY_HISTORY, POINT_HOW, TECHNIQUES, ERRORS,
+  useStored, uid, teamPlayers, EMPTY_PLAYERS, EMPTY_MATCH, EMPTY_HISTORY, POINT_HOW, TECHNIQUES, ERRORS,
   EMPTY_CLUB, defaultSeason, type Club, type Match, type MatchEvent, type Player,
 } from "@/lib/store";
 import { applyEvent, undoEvent, setScore, setsWon, server, setTarget, TIMEOUTS_PER_SET } from "@/lib/volley";
@@ -36,7 +36,9 @@ function Spieltag() {
 
   const roster = match.roster ?? [];
   const timeouts = match.timeouts ?? [];
-  const onCourt = roster.length ? players.filter((p) => roster.includes(p.id)) : players;
+  const pickPool = teamPlayers(players, match.team);
+  const pool = pickPool.length ? pickPool : players;
+  const onCourt = roster.length ? players.filter((p) => roster.includes(p.id)) : pool;
 
   const setMatch = (m: Match) => {
     const withId = m.id ? m : { ...m, id: uid(), date: Date.now(), season };
@@ -88,9 +90,9 @@ function Spieltag() {
 
       {match.events.length === 0 && players.length > 0 && (
         <div className="mt-3 rounded-xl border border-border bg-card p-4">
-          <p className="mb-2 text-sm font-semibold text-muted-foreground">Wer spielt heute mit? (leer = alle)</p>
+          <p className="mb-2 text-sm font-semibold text-muted-foreground">Wer spielt heute mit? (leer = {match.team && pickPool.length ? `ganzes Team ${match.team}` : "alle"})</p>
           <div className="flex flex-wrap gap-2">
-            {players.map((p) => (
+            {pool.map((p) => (
               <Chip key={p.id} on={roster.includes(p.id)} onClick={() => setMatch({ ...match, roster: roster.includes(p.id) ? roster.filter((x) => x !== p.id) : [...roster, p.id] })}>#{p.number} {p.name}</Chip>
             ))}
           </div>
