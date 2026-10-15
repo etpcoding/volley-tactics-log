@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Undo2, Timer } from "lucide-react";
 import {
   useStored, uid, EMPTY_PLAYERS, EMPTY_MATCH, EMPTY_HISTORY, POINT_HOW, TECHNIQUES, ERRORS,
-  type Match, type MatchEvent, type Player,
+  EMPTY_CLUB, defaultSeason, type Club, type Match, type MatchEvent, type Player,
 } from "@/lib/store";
 import { applyEvent, undoEvent, setScore, setsWon, server, setTarget, TIMEOUTS_PER_SET } from "@/lib/volley";
 
