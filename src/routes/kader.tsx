@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
-import { useStored, uid, POSITIONS, EMPTY_PLAYERS, type Player } from "@/lib/store";
+import { useStored, uid, POSITIONS, EMPTY_PLAYERS, EMPTY_MATCH, EMPTY_HISTORY, allMatches, type Player, type Match } from "@/lib/store";
+import { playerStats } from "@/lib/stats";
 
 export const Route = createFileRoute("/kader")({
   head: () => ({
@@ -31,6 +32,9 @@ function Kader() {
   };
 
   const sorted = [...players].sort((a, b) => a.number - b.number);
+  const [current] = useStored<Match>("vb-match", EMPTY_MATCH);
+  const [history] = useStored<Match[]>("vb-history", EMPTY_HISTORY);
+  const stats = playerStats(players, allMatches(current, history));
 
   return (
     <div>
@@ -72,7 +76,8 @@ function Kader() {
               <Trash2 className="h-5 w-5" />
             </button>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </div>
   );
