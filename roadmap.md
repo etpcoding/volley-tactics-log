@@ -1,0 +1,3 @@
+- [x] Team-Auswahl und Spielerzuordnung im Kader ergänzen.
+- [x] Spieltags-Kader strikt nach Team filtern.
+- [x] Team-Anlegen, Zuordnung und dauerhafte Speicherung im Browser prüfen.

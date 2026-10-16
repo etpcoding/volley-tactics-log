@@ -37,8 +37,8 @@ function Spieltag() {
   const roster = match.roster ?? [];
   const timeouts = match.timeouts ?? [];
   const pickPool = teamPlayers(players, match.team);
-  const pool = pickPool.length ? pickPool : players;
-  const onCourt = roster.length ? players.filter((p) => roster.includes(p.id)) : pool;
+  const pool = pickPool;
+  const onCourt = roster.length ? pool.filter((p) => roster.includes(p.id)) : pool;
 
   const setMatch = (m: Match) => {
     const withId = m.id ? m : { ...m, id: uid(), date: Date.now(), season };
@@ -79,7 +79,7 @@ function Spieltag() {
         <p className="mt-2 mb-1 text-sm font-semibold text-muted-foreground">Unser Team</p>
         {club.teams.length > 0 ? (
           <div className="flex flex-wrap gap-2">
-            {club.teams.map((t) => <Chip key={t} on={match.team === t} onClick={() => setMatch({ ...match, team: t })}>{t}</Chip>)}
+            {club.teams.map((t) => <Chip key={t} on={match.team === t} onClick={() => { setMatch({ ...match, team: t, roster: [] }); clear(); }}>{t}</Chip>)}
           </div>
         ) : (
           <input className="field" placeholder="z. B. Herren 1 (Teams im Kader anlegen)" value={match.team ?? ""} onChange={(e) => setMatch({ ...match, team: e.target.value })} />
@@ -90,7 +90,8 @@ function Spieltag() {
 
       {match.events.length === 0 && players.length > 0 && (
         <div className="mt-3 rounded-xl border border-border bg-card p-4">
-          <p className="mb-2 text-sm font-semibold text-muted-foreground">Wer spielt heute mit? (leer = {match.team && pickPool.length ? `ganzes Team ${match.team}` : "alle"})</p>
+          <p className="mb-2 text-sm font-semibold text-muted-foreground">Wer spielt heute mit?{pool.length > 0 ? ` (leer = ${match.team ? `ganzes Team ${match.team}` : "alle"})` : ""}</p>
+          {pool.length === 0 && <p className="text-sm text-muted-foreground">Noch keine Spieler diesem Team zugeordnet.</p>}
           <div className="flex flex-wrap gap-2">
             {pool.map((p) => (
               <Chip key={p.id} on={roster.includes(p.id)} onClick={() => setMatch({ ...match, roster: roster.includes(p.id) ? roster.filter((x) => x !== p.id) : [...roster, p.id] })}>#{p.number} {p.name}</Chip>

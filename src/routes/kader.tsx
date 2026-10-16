@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
-import { useStored, write, uid, EMPTY_CLUB, defaultSeason, type Club, POSITIONS, EMPTY_PLAYERS, EMPTY_MATCH, EMPTY_HISTORY, allMatches, type Player, type Match } from "@/lib/store";
+import { useStored, write, uid, EMPTY_CLUB, defaultSeason, type Club, POSITIONS, EMPTY_PLAYERS, EMPTY_MATCH, EMPTY_HISTORY, allMatches, teamPlayers, type Player, type Match } from "@/lib/store";
+import { Button } from "@/components/ui/button";
 import { playerStats } from "@/lib/stats";
 import { setsWon } from "@/lib/volley";
 
@@ -24,18 +25,26 @@ function Kader() {
   const [name, setName] = useState("");
   const [number, setNumber] = useState("");
   const [position, setPosition] = useState<string>(POSITIONS[1] ?? "Außenangriff");
+  const [club, setClub] = useStored<Club>("vb-club", EMPTY_CLUB);
+  const view = club.activeTeam ?? "";
+  const viewTeam = view && view !== "__none" && club.teams.includes(view) ? view : undefined;
 
   const add = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    setPlayers([...players, { id: uid(), name: name.trim(), number: Number(number) || 0, position }]);
+    setPlayers([...players, { id: uid(), name: name.trim(), number: Number(number) || 0, position, team: viewTeam ?? "" }]);
     setName(""); setNumber("");
   };
 
-  const sorted = [...players].sort((a, b) => a.number - b.number);
+  const visible = view === "__none" ? players.filter((p) => !p.team || !club.teams.includes(p.team)) : viewTeam ? teamPlayers(players, viewTeam) : players;
+  const sorted = [...visible].sort((a, b) => a.number - b.number);
+  const removeTeam = (t: string) => {
+    if (!confirm(`Team „${t}“ entfernen? Die Spieler bleiben ohne Team im Kader.`)) return;
+    setClub({ ...club, teams: club.teams.filter((x) => x !== t), activeTeam: club.activeTeam === t ? "" : (club.activeTeam ?? "") });
+    setPlayers(players.map((p) => (p.team === t ? { ...p, team: "" } : p)));
+  };
   const [current] = useStored<Match>("vb-match", EMPTY_MATCH);
   const [history, setHistory] = useStored<Match[]>("vb-history", EMPTY_HISTORY);
-  const [club, setClub] = useStored<Club>("vb-club", EMPTY_CLUB);
   const [teamName, setTeamName] = useState("");
   const [seasonFilter, setSeasonFilter] = useState("alle");
   const season = club.season || defaultSeason();
@@ -70,20 +79,29 @@ function Kader() {
         <p className="mt-3 mb-1 text-sm font-semibold text-muted-foreground">Teams</p>
         <div className="flex flex-wrap gap-2">
           {club.teams.map((t) => (
-            <button key={t} className="chip" onClick={() => confirm(`Team „${t}“ entfernen?`) && setClub({ ...club, teams: club.teams.filter((x) => x !== t) })}>{t} ✕</button>
+            <Button variant="ghost" key={t} className="chip" aria-label={`Team ${t} entfernen`} onClick={() => removeTeam(t)}>{t} ✕</Button>
           ))}
         </div>
         <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); const t = teamName.trim(); if (t && !club.teams.includes(t)) setClub({ ...club, teams: [...club.teams, t] }); setTeamName(""); }}>
           <input className="field" placeholder="z. B. Herren 1, Damen 2" value={teamName} onChange={(e) => setTeamName(e.target.value)} />
-          <button className="btn" disabled={!teamName.trim()}>+</button>
+          <Button variant="ghost" className="btn" disabled={!teamName.trim()}>+</Button>
         </form>
       </div>
 
-      <h1 className="mt-6 text-5xl">{club.name ? `${club.name} – ` : ""}Kader <span className="text-primary">{players.length}</span></h1>
+      <h1 className="mt-6 break-words text-5xl">{viewTeam ?? (club.name || "")}{viewTeam || club.name ? " – " : ""}Kader <span className="text-primary">{visible.length}</span></h1>
+      {club.teams.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {club.teams.map((t) => (
+            <Button variant="ghost" key={t} className={`chip ${viewTeam === t ? "chip-on" : ""}`} onClick={() => setClub({ ...club, activeTeam: t })}>{t} ({players.filter((p) => p.team === t).length})</Button>
+          ))}
+          <Button variant="ghost" className={`chip ${view === "__none" ? "chip-on" : ""}`} onClick={() => setClub({ ...club, activeTeam: "__none" })}>Ohne Team</Button>
+          <Button variant="ghost" className={`chip ${!viewTeam && view !== "__none" ? "chip-on" : ""}`} onClick={() => setClub({ ...club, activeTeam: "" })}>Alle</Button>
+        </div>
+      )}
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <span className="text-sm text-muted-foreground">Statistik:</span>
         {["alle", ...seasons].map((s) => (
-          <button key={s} className={`chip ${seasonFilter === s ? "chip-on" : ""}`} onClick={() => setSeasonFilter(s)}>{s === "alle" ? "Alle Saisons" : s}</button>
+          <Button variant="ghost" key={s} className={`chip ${seasonFilter === s ? "chip-on" : ""}`} onClick={() => setSeasonFilter(s)}>{s === "alle" ? "Alle Saisons" : s}</Button>
         ))}
       </div>
       <form onSubmit={add} className="mt-4 grid gap-2 rounded-xl border border-border bg-card p-4">
@@ -93,21 +111,28 @@ function Kader() {
         </div>
         <div className="flex flex-wrap gap-2">
           {POSITIONS.map((p) => (
-            <button type="button" key={p} onClick={() => setPosition(p)} className={`chip ${position === p ? "chip-on" : ""}`}>{p}</button>
+            <Button variant="ghost" type="button" key={p} onClick={() => setPosition(p)} className={`chip ${position === p ? "chip-on" : ""}`}>{p}</Button>
           ))}
         </div>
-        <button className="btn" disabled={!name.trim()}>Spieler hinzufügen</button>
+        <Button variant="ghost" className="btn" disabled={!name.trim()}>Spieler hinzufügen{viewTeam ? ` zu ${viewTeam}` : ""}</Button>
       </form>
       <ul className="mt-4 grid gap-2">
-        {sorted.length === 0 && <p className="text-center text-muted-foreground">Noch keine Spieler im Kader.</p>}
+        {sorted.length === 0 && <p className="text-center text-muted-foreground">{viewTeam ? `Noch keine Spieler in ${viewTeam}.` : "Noch keine Spieler im Kader."}</p>}
         {sorted.map((p) => {
           const s = stats.find((x) => x.p.id === p.id);
           return (
           <li key={p.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary font-display text-2xl text-primary-foreground">{p.number}</span>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <p className="font-semibold">{p.name}</p>
               <p className="text-sm text-muted-foreground">{p.position}</p>
+              {club.teams.length > 0 && (
+                <select aria-label={`Team von ${p.name}`} className="field mt-1 h-8 py-0 text-sm" value={p.team && club.teams.includes(p.team) ? p.team : ""}
+                  onChange={(e) => setPlayers(players.map((x) => (x.id === p.id ? { ...x, team: e.target.value } : x)))}>
+                  <option value="">Ohne Team</option>
+                  {club.teams.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              )}
               {s && (
                 <div className="mt-1 flex flex-wrap gap-x-3 text-xs">
                   <span>{s.games} Spiele</span>
@@ -119,9 +144,9 @@ function Kader() {
                 </div>
               )}
             </div>
-            <button aria-label={`${p.name} löschen`} onClick={() => confirm(`${p.name} löschen?`) && setPlayers(players.filter((x) => x.id !== p.id))} className="rounded-lg p-2 text-destructive hover:bg-muted">
+            <Button variant="ghost" aria-label={`${p.name} löschen`} onClick={() => confirm(`${p.name} löschen?`) && setPlayers(players.filter((x) => x.id !== p.id))} className="rounded-lg p-2 text-destructive hover:bg-muted">
               <Trash2 className="h-5 w-5" />
-            </button>
+            </Button>
           </li>
           );
         })}
@@ -138,9 +163,9 @@ function Kader() {
               {list.map((m) => { const w = setsWon(m.events, m.set); return (
                 <li key={m.id} className="flex items-center gap-2">
                   <span className="text-muted-foreground">{m.date ? new Date(m.date).toLocaleDateString("de-DE") : ""}</span>
-                  <span className="flex-1">{m.team || "Team"} – {m.opponent || "Gegner"}</span>
+                  <span className="min-w-0 flex-1">{m.team || "Team"} – {m.opponent || "Gegner"}</span>
                   <b className={w.us > w.them ? "text-success" : "text-destructive"}>{w.us}:{w.them}</b>
-                  <button aria-label="Spiel löschen" className="p-1 text-destructive" onClick={() => confirm("Spiel aus dem Archiv löschen?") && setHistory(history.filter((x) => x.id !== m.id))}><Trash2 className="h-4 w-4" /></button>
+                  <Button variant="ghost" aria-label="Spiel löschen" className="p-1 text-destructive" onClick={() => confirm("Spiel aus dem Archiv löschen?") && setHistory(history.filter((x) => x.id !== m.id))}><Trash2 className="h-4 w-4" /></Button>
                 </li>
               ); })}
             </ul>
@@ -152,7 +177,7 @@ function Kader() {
       <div className="mt-6 grid gap-2 rounded-xl border border-border bg-card p-4">
         <p className="text-sm text-muted-foreground">Sichere alle Daten (Verein, Kader, Spiele, Taktik) als Datei, um sie über Jahre aufzubewahren oder auf ein anderes Gerät zu übertragen.</p>
         <div className="flex gap-2">
-          <button className="btn flex-1" onClick={exportData}>Sicherung herunterladen</button>
+          <Button variant="ghost" className="btn flex-1" onClick={exportData}>Sicherung herunterladen</Button>
           <label className="chip flex flex-1 cursor-pointer items-center justify-center">Sicherung laden<input type="file" accept="application/json" className="hidden" onChange={(e) => importData(e.target.files?.[0])} /></label>
         </div>
       </div>

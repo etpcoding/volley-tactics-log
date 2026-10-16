@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Team rosters use the shared `teamPlayers` filter; a selected empty team must never fall back to other teams' players, to keep match attribution correct.
