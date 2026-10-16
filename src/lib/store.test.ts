@@ -12,4 +12,7 @@ describe("Teams", () => {
   it("ohne Team werden alle Spieler gezeigt", () => {
     expect(teamPlayers(ps).length).toBe(2);
   });
+  it("ein leeres Team übernimmt keine fremden Spieler", () => {
+    expect(teamPlayers(ps, "Herren 2")).toEqual([]);
+  });
 });
