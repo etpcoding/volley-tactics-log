@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
-import { useStored, write, uid, EMPTY_CLUB, defaultSeason, type Club, POSITIONS, EMPTY_PLAYERS, EMPTY_MATCH, EMPTY_HISTORY, allMatches, type Player, type Match } from "@/lib/store";
+import { useStored, write, uid, EMPTY_CLUB, defaultSeason, type Club, POSITIONS, EMPTY_PLAYERS, EMPTY_MATCH, EMPTY_HISTORY, allMatches, teamPlayers, type Player, type Match } from "@/lib/store";
+import { Button } from "@/components/ui/button";
 import { playerStats } from "@/lib/stats";
 import { setsWon } from "@/lib/volley";
 
@@ -31,7 +32,7 @@ function Kader() {
   const add = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    setPlayers([...players, { id: uid(), name: name.trim(), number: Number(number) || 0, position, team: viewTeam }]);
+    setPlayers([...players, { id: uid(), name: name.trim(), number: Number(number) || 0, position, team: viewTeam ?? "" }]);
     setName(""); setNumber("");
   };
 
@@ -39,8 +40,8 @@ function Kader() {
   const sorted = [...visible].sort((a, b) => a.number - b.number);
   const removeTeam = (t: string) => {
     if (!confirm(`Team „${t}“ entfernen? Die Spieler bleiben ohne Team im Kader.`)) return;
-    setClub({ ...club, teams: club.teams.filter((x) => x !== t), activeTeam: club.activeTeam === t ? "" : club.activeTeam });
-    setPlayers(players.map((p) => (p.team === t ? { ...p, team: undefined } : p)));
+    setClub({ ...club, teams: club.teams.filter((x) => x !== t), activeTeam: club.activeTeam === t ? "" : (club.activeTeam ?? "") });
+    setPlayers(players.map((p) => (p.team === t ? { ...p, team: "" } : p)));
   };
   const [current] = useStored<Match>("vb-match", EMPTY_MATCH);
   const [history, setHistory] = useStored<Match[]>("vb-history", EMPTY_HISTORY);
@@ -127,7 +128,7 @@ function Kader() {
               <p className="text-sm text-muted-foreground">{p.position}</p>
               {club.teams.length > 0 && (
                 <select aria-label={`Team von ${p.name}`} className="field mt-1 h-8 py-0 text-sm" value={p.team && club.teams.includes(p.team) ? p.team : ""}
-                  onChange={(e) => setPlayers(players.map((x) => (x.id === p.id ? { ...x, team: e.target.value || undefined } : x)))}>
+                  onChange={(e) => setPlayers(players.map((x) => (x.id === p.id ? { ...x, team: e.target.value } : x)))}>
                   <option value="">Ohne Team</option>
                   {club.teams.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
