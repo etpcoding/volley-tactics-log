@@ -24,18 +24,26 @@ function Kader() {
   const [name, setName] = useState("");
   const [number, setNumber] = useState("");
   const [position, setPosition] = useState<string>(POSITIONS[1] ?? "Außenangriff");
+  const [club, setClub] = useStored<Club>("vb-club", EMPTY_CLUB);
+  const view = club.activeTeam ?? "";
+  const viewTeam = view && view !== "__none" && club.teams.includes(view) ? view : undefined;
 
   const add = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    setPlayers([...players, { id: uid(), name: name.trim(), number: Number(number) || 0, position }]);
+    setPlayers([...players, { id: uid(), name: name.trim(), number: Number(number) || 0, position, team: viewTeam }]);
     setName(""); setNumber("");
   };
 
-  const sorted = [...players].sort((a, b) => a.number - b.number);
+  const visible = view === "__none" ? players.filter((p) => !p.team || !club.teams.includes(p.team)) : viewTeam ? teamPlayers(players, viewTeam) : players;
+  const sorted = [...visible].sort((a, b) => a.number - b.number);
+  const removeTeam = (t: string) => {
+    if (!confirm(`Team „${t}“ entfernen? Die Spieler bleiben ohne Team im Kader.`)) return;
+    setClub({ ...club, teams: club.teams.filter((x) => x !== t), activeTeam: club.activeTeam === t ? "" : club.activeTeam });
+    setPlayers(players.map((p) => (p.team === t ? { ...p, team: undefined } : p)));
+  };
   const [current] = useStored<Match>("vb-match", EMPTY_MATCH);
   const [history, setHistory] = useStored<Match[]>("vb-history", EMPTY_HISTORY);
-  const [club, setClub] = useStored<Club>("vb-club", EMPTY_CLUB);
   const [teamName, setTeamName] = useState("");
   const [seasonFilter, setSeasonFilter] = useState("alle");
   const season = club.season || defaultSeason();
@@ -70,7 +78,7 @@ function Kader() {
         <p className="mt-3 mb-1 text-sm font-semibold text-muted-foreground">Teams</p>
         <div className="flex flex-wrap gap-2">
           {club.teams.map((t) => (
-            <button key={t} className="chip" onClick={() => confirm(`Team „${t}“ entfernen?`) && setClub({ ...club, teams: club.teams.filter((x) => x !== t) })}>{t} ✕</button>
+            <button key={t} className="chip" aria-label={`Team ${t} entfernen`} onClick={() => removeTeam(t)}>{t} ✕</button>
           ))}
         </div>
         <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); const t = teamName.trim(); if (t && !club.teams.includes(t)) setClub({ ...club, teams: [...club.teams, t] }); setTeamName(""); }}>
@@ -79,7 +87,16 @@ function Kader() {
         </form>
       </div>
 
-      <h1 className="mt-6 text-5xl">{club.name ? `${club.name} – ` : ""}Kader <span className="text-primary">{players.length}</span></h1>
+      <h1 className="mt-6 text-5xl">{viewTeam ?? (club.name || "")}{viewTeam || club.name ? " – " : ""}Kader <span className="text-primary">{visible.length}</span></h1>
+      {club.teams.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {club.teams.map((t) => (
+            <button key={t} className={`chip ${viewTeam === t ? "chip-on" : ""}`} onClick={() => setClub({ ...club, activeTeam: t })}>{t} ({players.filter((p) => p.team === t).length})</button>
+          ))}
+          <button className={`chip ${view === "__none" ? "chip-on" : ""}`} onClick={() => setClub({ ...club, activeTeam: "__none" })}>Ohne Team</button>
+          <button className={`chip ${!viewTeam && view !== "__none" ? "chip-on" : ""}`} onClick={() => setClub({ ...club, activeTeam: "" })}>Alle</button>
+        </div>
+      )}
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <span className="text-sm text-muted-foreground">Statistik:</span>
         {["alle", ...seasons].map((s) => (
@@ -96,10 +113,10 @@ function Kader() {
             <button type="button" key={p} onClick={() => setPosition(p)} className={`chip ${position === p ? "chip-on" : ""}`}>{p}</button>
           ))}
         </div>
-        <button className="btn" disabled={!name.trim()}>Spieler hinzufügen</button>
+        <button className="btn" disabled={!name.trim()}>Spieler hinzufügen{viewTeam ? ` zu ${viewTeam}` : ""}</button>
       </form>
       <ul className="mt-4 grid gap-2">
-        {sorted.length === 0 && <p className="text-center text-muted-foreground">Noch keine Spieler im Kader.</p>}
+        {sorted.length === 0 && <p className="text-center text-muted-foreground">{viewTeam ? `Noch keine Spieler in ${viewTeam}.` : "Noch keine Spieler im Kader."}</p>}
         {sorted.map((p) => {
           const s = stats.find((x) => x.p.id === p.id);
           return (
@@ -108,6 +125,13 @@ function Kader() {
             <div className="flex-1">
               <p className="font-semibold">{p.name}</p>
               <p className="text-sm text-muted-foreground">{p.position}</p>
+              {club.teams.length > 0 && (
+                <select aria-label={`Team von ${p.name}`} className="field mt-1 h-8 py-0 text-sm" value={p.team && club.teams.includes(p.team) ? p.team : ""}
+                  onChange={(e) => setPlayers(players.map((x) => (x.id === p.id ? { ...x, team: e.target.value || undefined } : x)))}>
+                  <option value="">Ohne Team</option>
+                  {club.teams.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              )}
               {s && (
                 <div className="mt-1 flex flex-wrap gap-x-3 text-xs">
                   <span>{s.games} Spiele</span>
