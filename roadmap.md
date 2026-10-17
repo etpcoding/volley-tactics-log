@@ -1,3 +1,6 @@
 - [x] Team-Auswahl und Spielerzuordnung im Kader ergänzen.
 - [x] Spieltags-Kader strikt nach Team filtern.
 - [x] Team-Anlegen, Zuordnung und dauerhafte Speicherung im Browser prüfen.
+- [ ] Gemeinsame Cloud-Daten und sichere Eigentümer-/Trainerrechte einrichten.
+- [ ] Anmeldung, Profile, Trainerfreigabe und Übernahme bestehender Daten ergänzen.
+- [ ] Synchronisierung und Zugriffsrechte prüfen.
