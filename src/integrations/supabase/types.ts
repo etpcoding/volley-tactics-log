@@ -14,16 +14,102 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_path: string
+          display_name: string
+          id: string
+        }
+        Insert: {
+          avatar_path?: string
+          display_name?: string
+          id: string
+        }
+        Update: {
+          avatar_path?: string
+          display_name?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      shared_documents: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+          version: number
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+          version?: number
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+          version?: number
+        }
+        Relationships: []
+      }
+      trainer_access: {
+        Row: {
+          created_at: string
+          email: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_edit_document: { Args: { document_key: string }; Returns: boolean }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      save_document: {
+        Args: {
+          document_key: string
+          document_value: Json
+          expected_version: number
+        }
+        Returns: number
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "trainer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +236,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "trainer"],
+    },
   },
 } as const
