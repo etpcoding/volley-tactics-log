@@ -28,6 +28,13 @@ export type Play = { id: string; name: string; notes: string; tokens: Token[]; s
 
 const cache = new Map<string, unknown>();
 const listeners = new Set<() => void>();
+let cloudWriter: ((key: string, value: unknown) => void) | undefined;
+export function connectStore(writer: (key: string, value: unknown) => void) { cloudWriter = writer; }
+export function receiveStored(key: string, value: unknown) {
+  cache.set(key, value);
+  listeners.forEach((l) => l());
+}
+export function storedSnapshot() { return Object.fromEntries(cache); }
 
 function read<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -42,6 +49,7 @@ function read<T>(key: string, fallback: T): T {
 }
 
 export function write<T>(key: string, value: T) {
+  if (cloudWriter) { cloudWriter(key, value); return; }
   cache.set(key, value);
   localStorage.setItem(key, JSON.stringify(value));
   listeners.forEach((l) => l());
