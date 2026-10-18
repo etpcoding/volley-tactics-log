@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuswertungRouteImport } from './routes/auswertung'
 import { Route as KaderRouteImport } from './routes/kader'
+import { Route as KontoRouteImport } from './routes/konto'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SpieltagRouteImport } from './routes/spieltag'
 import { Route as TaktikRouteImport } from './routes/taktik'
 
@@ -30,6 +32,16 @@ const KaderRoute = KaderRouteImport.update({
   path: '/kader',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KontoRoute = KontoRouteImport.update({
+  id: '/konto',
+  path: '/konto',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SpieltagRoute = SpieltagRouteImport.update({
   id: '/spieltag',
   path: '/spieltag',
@@ -45,6 +57,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auswertung': typeof AuswertungRoute
   '/kader': typeof KaderRoute
+  '/konto': typeof KontoRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/spieltag': typeof SpieltagRoute
   '/taktik': typeof TaktikRoute
 }
@@ -52,6 +66,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auswertung': typeof AuswertungRoute
   '/kader': typeof KaderRoute
+  '/konto': typeof KontoRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/spieltag': typeof SpieltagRoute
   '/taktik': typeof TaktikRoute
 }
@@ -60,21 +76,47 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auswertung': typeof AuswertungRoute
   '/kader': typeof KaderRoute
+  '/konto': typeof KontoRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/spieltag': typeof SpieltagRoute
   '/taktik': typeof TaktikRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auswertung' | '/kader' | '/spieltag' | '/taktik'
+  fullPaths:
+    | '/'
+    | '/auswertung'
+    | '/kader'
+    | '/konto'
+    | '/reset-password'
+    | '/spieltag'
+    | '/taktik'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auswertung' | '/kader' | '/spieltag' | '/taktik'
-  id: '__root__' | '/' | '/auswertung' | '/kader' | '/spieltag' | '/taktik'
+  to:
+    | '/'
+    | '/auswertung'
+    | '/kader'
+    | '/konto'
+    | '/reset-password'
+    | '/spieltag'
+    | '/taktik'
+  id:
+    | '__root__'
+    | '/'
+    | '/auswertung'
+    | '/kader'
+    | '/konto'
+    | '/reset-password'
+    | '/spieltag'
+    | '/taktik'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuswertungRoute: typeof AuswertungRoute
   KaderRoute: typeof KaderRoute
+  KontoRoute: typeof KontoRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SpieltagRoute: typeof SpieltagRoute
   TaktikRoute: typeof TaktikRoute
 }
@@ -102,6 +144,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KaderRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/konto': {
+      id: '/konto'
+      path: '/konto'
+      fullPath: '/konto'
+      preLoaderRoute: typeof KontoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/spieltag': {
       id: '/spieltag'
       path: '/spieltag'
@@ -123,6 +179,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuswertungRoute: AuswertungRoute,
   KaderRoute: KaderRoute,
+  KontoRoute: KontoRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SpieltagRoute: SpieltagRoute,
   TaktikRoute: TaktikRoute,
 }
