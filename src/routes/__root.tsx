@@ -9,7 +9,8 @@ import {
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { Users, Shapes, Trophy, BarChart3, Home } from "lucide-react";
+import { Users, Shapes, Trophy, BarChart3, Home, UserCircle } from "lucide-react";
+import { CloudProvider, useCloud } from "@/components/cloud-provider";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -79,12 +80,27 @@ const tabs = [
   { to: "/auswertung", label: "Auswertung", icon: BarChart3 },
 ] as const;
 
+function AccountLink() {
+  const { user, role } = useCloud();
+  return (
+    <div className="mb-3 flex justify-end">
+      <Link to="/konto" className="flex items-center gap-1 text-sm text-muted-foreground">
+        <UserCircle className="h-4 w-4" />
+        {user ? `${user.email}${role === "admin" ? " · Eigentümer" : role === "trainer" ? " · Trainer" : ""}` : "Anmelden"}
+      </Link>
+    </div>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
       <div className="mx-auto min-h-screen max-w-3xl px-4 pb-28 pt-6">
-        <Outlet />
+        <CloudProvider>
+          <AccountLink />
+          <Outlet />
+        </CloudProvider>
       </div>
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 backdrop-blur">
         <div className="mx-auto flex max-w-3xl">
