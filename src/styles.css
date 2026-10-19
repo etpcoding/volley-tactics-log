@@ -79,7 +79,7 @@
 /* Brutalist: harte Kanten, dicke Linien, Versatzschatten */
 .border { border-width: 2px; }
 .bg-card { box-shadow: var(--shadow-card); }
-.uppercase, .tracking-widest { font-family: var(--font-mono); }
+.tracking-widest { font-family: var(--font-mono); }
 nav.fixed { border-top-width: 3px; box-shadow: none; }
 
 @utility chip {
