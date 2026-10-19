@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import { Users, Shapes, Trophy, BarChart3, Home, UserCircle } from "lucide-react";
 import { CloudProvider, useCloud } from "@/components/cloud-provider";
 
+import logo from "@/assets/vc-haslach-logo.webp.asset.json";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -47,14 +48,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Volley Coach" },
+      { title: "VC 94 Haslach · Volley Coach" },
       { name: "description", content: "Kader, Taktik und Live-Statistik für dein Volleyballteam." },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Bebas+Neue&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" },
     ],
   }),
   shellComponent: RootShell,
@@ -83,8 +84,12 @@ const tabs = [
 function AccountLink() {
   const { user, role } = useCloud();
   return (
-    <div className="mb-3 flex justify-end">
-      <Link to="/konto" className="flex items-center gap-1 text-sm text-muted-foreground">
+    <div className="mb-5 flex items-center justify-between">
+      <Link to="/" className="flex items-center gap-3">
+        <img src={logo.url} alt="VC 94 Haslach" className="h-11 w-auto" />
+        <span className="leading-tight"><span className="block text-sm font-bold text-primary">VC 94 Haslach</span><span className="block text-xs text-muted-foreground">Volley Coach</span></span>
+      </Link>
+      <Link to="/konto" className="flex items-center gap-1 rounded-full bg-card px-3 py-1.5 text-xs text-muted-foreground">
         <UserCircle className="h-4 w-4" />
         {user ? `${user.email}${role === "admin" ? " · Eigentümer" : role === "trainer" ? " · Trainer" : ""}` : "Anmelden"}
       </Link>
@@ -109,8 +114,8 @@ function RootComponent() {
               key={t.to}
               to={t.to}
               activeOptions={{ exact: true }}
-              className="flex flex-1 flex-col items-center gap-1 py-3 text-xs text-muted-foreground"
-              activeProps={{ className: "text-primary" }}
+              className="flex flex-1 flex-col items-center gap-1 py-3 text-xs font-medium text-muted-foreground"
+              activeProps={{ className: "text-primary font-bold" }}
             >
               <t.icon className="h-5 w-5" />
               {t.label}
