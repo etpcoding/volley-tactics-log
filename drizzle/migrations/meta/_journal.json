@@ -15,6 +15,13 @@
       "when": 1792308088827,
       "tag": "0001_open_match_editing_to_all_users",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792384283584,
+      "tag": "0002_open_match_editing_to_visitors",
+      "breakpoints": true
     }
   ]
 }
