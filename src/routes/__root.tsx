@@ -55,7 +55,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" },
     ],
   }),
   shellComponent: RootShell,
@@ -87,9 +87,9 @@ function AccountLink() {
     <div className="mb-5 flex items-center justify-between">
       <Link to="/" className="flex items-center gap-3">
         <img src={logo.url} alt="VC 94 Haslach" className="h-11 w-auto" />
-        <span className="leading-tight"><span className="block text-sm font-bold text-primary">VC 94 Haslach</span><span className="block text-xs text-muted-foreground">Volley Coach</span></span>
+        <span className="leading-tight"><span className="block font-display text-lg uppercase text-primary">VC 94 Haslach</span><span className="block text-[10px] uppercase tracking-widest text-muted-foreground">Volley Coach</span></span>
       </Link>
-      <Link to="/konto" className="flex items-center gap-1 rounded-full bg-card px-3 py-1.5 text-xs text-muted-foreground">
+      <Link to="/konto" className="flex items-center gap-1 chip py-1.5 text-xs">
         <UserCircle className="h-4 w-4" />
         {user ? `${user.email}${role === "admin" ? " · Eigentümer" : role === "trainer" ? " · Trainer" : ""}` : "Anmelden"}
       </Link>
@@ -107,7 +107,7 @@ function RootComponent() {
           <Outlet />
         </CloudProvider>
       </div>
-      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 backdrop-blur">
+      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card">
         <div className="mx-auto flex max-w-3xl">
           {tabs.map((t) => (
             <Link
@@ -115,7 +115,7 @@ function RootComponent() {
               to={t.to}
               activeOptions={{ exact: true }}
               className="flex flex-1 flex-col items-center gap-1 py-3 text-xs font-medium text-muted-foreground"
-              activeProps={{ className: "text-primary font-bold" }}
+              activeProps={{ className: "bg-accent text-foreground font-bold" }}
             >
               <t.icon className="h-5 w-5" />
               {t.label}
