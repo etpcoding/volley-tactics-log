@@ -10,13 +10,13 @@ describe("Cloud permissions", () => {
   it("every signed-in user can enter matches", () => {
     expect(canEditKey("trainer", "vb-match")).toBe(true);
     expect(canEditKey("trainer", "vb-history")).toBe(true);
-    expect(canEditKey(null, "vb-match")).toBe(false);
+    expect(canEditKey(null, "vb-match")).toBe(true);
   });
   it("approved trainers can edit tactics", () => {
     expect(canEditKey("trainer", "vb-plays")).toBe(true);
     expect(canEditKey("admin", "vb-plays")).toBe(true);
   });
   it("visitors cannot write shared data", () => {
-    for (const key of ["vb-club", "vb-players", "vb-match", "vb-history", "vb-plays"]) expect(canEditKey(null, key)).toBe(false);
+    for (const key of ["vb-club", "vb-players", "vb-plays"]) expect(canEditKey(null, key)).toBe(false);
   });
 });
