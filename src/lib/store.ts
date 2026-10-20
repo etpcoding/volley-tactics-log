@@ -22,8 +22,12 @@ export type Match = {
   date?: number;
   team?: string;
   season?: string;
+  /** Läufersystem, aus dem die gespeicherten Aufstellungen pro Rotation angezeigt werden */
+  lineupSystem?: string;
+  /** Startrotation je Satz (1–6), Standard 1 */
+  startRotation?: Record<number, number>;
 };
-export type Token = { id: string; label: string; x: number; y: number; team: "us" | "them"; playerId?: string };
+export type Token = { id: string; label: string; x: number; y: number; team: "us" | "them"; playerId?: string; home?: number };
 export type Play = { id: string; name: string; notes: string; tokens: Token[]; system?: string; rotation?: number };
 
 const cache = new Map<string, unknown>();
