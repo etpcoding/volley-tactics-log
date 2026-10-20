@@ -21,3 +21,15 @@ describe("Satzregeln", () => {
     expect(m.set).toBe(3);
   });
 });
+
+import { currentRotation } from "./volley";
+describe("Rotation am Spieltag", () => {
+  it("rotiert nur bei Side-out, nicht bei eigenem Aufschlagpunkt", () => {
+    const m: Match = { opponent: "", set: 1, events: [ev(1, true), ev(1, false), ev(1, true), ev(1, true)] };
+    expect(currentRotation(m)).toBe(2);
+  });
+  it("Rotation 6 springt zurück auf 1", () => {
+    const events = Array.from({ length: 6 }, () => [ev(1, false), ev(1, true)]).flat();
+    expect(currentRotation({ opponent: "", set: 1, events })).toBe(1);
+  });
+});

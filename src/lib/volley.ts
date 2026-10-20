@@ -55,3 +55,17 @@ export function server(match: Match): "us" | "them" {
   if (last) return isOurs(last) ? "us" : "them";
   return match.set % 2 === 1 ? "us" : "them";
 }
+
+/** Our rotation (1–6) in a set: advances on every side-out (we win a rally while the opponent served). */
+export function currentRotation(match: Match, set = match.set): number {
+  const start = match.startRotation?.[set] ?? 1;
+  const ev = match.events.filter((e) => e.set === set);
+  let serving: "us" | "them" = set % 2 === 1 ? "us" : "them";
+  let turns = 0;
+  for (const e of ev) {
+    const ours = isOurs(e);
+    if (ours && serving === "them") turns++;
+    serving = ours ? "us" : "them";
+  }
+  return ((start - 1 + turns) % 6) + 1;
+}
