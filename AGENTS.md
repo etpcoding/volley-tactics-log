@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Team rosters use the shared `teamPlayers` filter; a selected empty team must never fall back to other teams' players, to keep match attribution correct.
+- Shared interface styling lives in semantic tokens and shared utilities in src/styles.css; the root shell provides desktop navigation and mobile bottom navigation so modules remain visually consistent.
