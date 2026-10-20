@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { Trash2 } from "lucide-react";
+import { Court, POS, SYSTEMS, rolesFor, homeOf } from "@/components/court";
 import { useStored, uid, EMPTY_PLAYERS, EMPTY_PLAYS, type Play, type Player, type Token } from "@/lib/store";
 
 export const Route = createFileRoute("/taktik")({
@@ -17,24 +18,6 @@ export const Route = createFileRoute("/taktik")({
   component: Taktik,
 });
 
-// Court positions I..VI on our half (top = net)
-const POS: [number, number][] = [[80, 78], [80, 25], [50, 25], [20, 25], [20, 78], [50, 78]];
-const POS_NAME = ["I", "II", "III", "IV", "V", "VI"];
-
-// Roles at positions I..VI in rotation 1 (Läufer / setter on position I)
-const SYSTEMS: Record<string, { label: string; info: string; roles: string[] }> = {
-  "5:1": { label: "5:1 (ein Läufer)", info: "Ein Zuspieler (Läufer) spielt in allen Rotationen zu, Diagonal steht ihm gegenüber.", roles: ["Z", "A1", "M1", "D", "A2", "M2"] },
-  "4:2": { label: "4:2", info: "Zwei Zuspieler, gespielt wird immer vom Zuspieler aus der Vorderreihe.", roles: ["Z1", "A1", "M1", "Z2", "A2", "M2"] },
-  "6:2": { label: "6:2 (zwei Läufer)", info: "Zwei Läufer, zugespielt wird vom Zuspieler aus der Hinterreihe – vorne immer drei Angreifer.", roles: ["Z1", "A1", "M1", "Z2", "A2", "M2"] },
-  "6:0": { label: "6:0", info: "Wer auf Position III / II steht, spielt zu – ideal für Anfänger.", roles: ["A", "A", "Z", "A", "A", "A"] },
-};
-
-function rolesFor(system: string, rotation: number) {
-  const base = SYSTEMS[system]?.roles ?? [];
-  // After each rotation the player from II moves to I, etc.
-  return POS.map((_, i) => base[(i + rotation - 1) % 6] ?? "");
-}
-
 function Taktik() {
   const [players] = useStored<Player[]>("vb-players", EMPTY_PLAYERS);
   const [plays, setPlays] = useStored<Play[]>("vb-plays", EMPTY_PLAYS);
@@ -49,8 +32,14 @@ function Taktik() {
   tokRef.current = tokens;
   const roles = rolesFor(system, rotation);
 
+  const full = tokens.length >= 6;
+
   const startDrag = (player: Player) => (e: React.PointerEvent) => {
     e.preventDefault();
+    const cur = tokRef.current;
+    const self = cur.find((t) => t.playerId === player.id);
+    // Phase 2: all six placed → move freely (reception formation), home slot stays
+    const free = cur.length >= 6 && !!self;
     let inside = false, lastX = 0, lastY = 0;
     const onMove = (ev: PointerEvent) => {
       const r = court.current?.getBoundingClientRect();
@@ -59,23 +48,28 @@ function Taktik() {
       lastY = ((ev.clientY - r.top) / r.height) * 100;
       inside = lastX >= 0 && lastX <= 100 && lastY >= 0 && lastY <= 100;
       const rest = tokRef.current.filter((t) => t.playerId !== player.id);
-      setTokens(inside ? [...rest, { id: player.id, playerId: player.id, team: "us", label: String(player.number), x: lastX, y: lastY }] : rest);
+      const prev = tokRef.current.find((t) => t.playerId === player.id) ?? self;
+      const x = Math.min(96, Math.max(4, lastX)), y = Math.min(96, Math.max(4, lastY));
+      setTokens(inside ? [...rest, { id: player.id, playerId: player.id, team: "us", label: String(player.number), x, y, home: prev?.home }] : rest);
     };
     const onUp = () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
-      if (!inside) return;
-      // snap to nearest position slot; swap if occupied
+      if (!inside) { setTokens(tokRef.current.filter((t) => t.playerId !== player.id)); return; }
+      if (free) return;
+      // Phase 1: snap to nearest slot; swap (court) or send occupant to bench (from bench)
       let best = -1, bd = 14;
       POS.forEach(([x, y], i) => { const d = Math.hypot(x - lastX, (y - lastY) / 2); if (d < bd) { bd = d; best = i; } });
-      if (best < 0) return;
+      const others = tokRef.current.filter((t) => t.playerId !== player.id);
+      if (best < 0) { setTokens(others); return; }
       const [sx, sy] = POS[best]!;
-      const prev = tokRef.current.find((t) => t.playerId === player.id);
-      setTokens(tokRef.current.map((t) => {
-        if (t.playerId === player.id) return { ...t, x: sx, y: sy };
-        if (Math.hypot(t.x - sx, t.y - sy) < 1 && prev) return { ...t, x: prev.x, y: prev.y };
-        return t;
-      }).filter((t) => !(t.playerId !== player.id && Math.hypot(t.x - sx, t.y - sy) < 1 && !prev)));
+      const me: Token = { id: player.id, playerId: player.id, team: "us", label: String(player.number), x: sx, y: sy, home: best };
+      const next = others.flatMap((t) => {
+        if (homeOf(t) !== best) return [t];
+        if (self) { const h = homeOf(self); const [px, py] = POS[h]!; return [{ ...t, x: px, y: py, home: h }]; }
+        return [];
+      });
+      setTokens([...next, me]);
     };
     onMove(e.nativeEvent);
     window.addEventListener("pointermove", onMove);
@@ -84,24 +78,21 @@ function Taktik() {
 
   const rotate = () => {
     setRotation((rotation % 6) + 1);
-    // players move clockwise: II→I, III→II, IV→III, V→IV, VI→V, I→VI
-    setTokens(tokens.map((t) => {
-      const i = POS.findIndex(([x, y]) => Math.hypot(x - t.x, y - t.y) < 1);
-      if (i < 0) return t;
-      const [x, y] = POS[(i + 5) % 6]!;
-      return { ...t, x, y };
-    }));
+    // II→I, III→II, …, I→VI; back to base slots
+    setTokens(tokens.map((t) => { const h = (homeOf(t) + 5) % 6; const [x, y] = POS[h]!; return { ...t, x, y, home: h }; }));
   };
+  const toBase = () => setTokens(tokens.map((t) => { const h = homeOf(t); const [x, y] = POS[h]!; return { ...t, x, y, home: h }; }));
 
-  const save = () => {
-    const nm = name.trim() || `${system} Rotation ${rotation}`;
+  const save = (asCopy = false) => {
+    let nm = name.trim() || `${system} Rotation ${rotation}`;
+    if (asCopy && activeId && plays.some((p) => p.name === nm)) nm = `${nm} (Kopie)`;
     const data = { name: nm, notes, tokens, system, rotation };
-    if (activeId) setPlays(plays.map((p) => (p.id === activeId ? { ...p, ...data } : p)));
+    if (activeId && !asCopy) setPlays(plays.map((p) => (p.id === activeId ? { ...p, ...data } : p)));
     else { const id = uid(); setPlays([...plays, { id, ...data }]); setActiveId(id); }
     setName(nm);
   };
   const load = (p: Play) => {
-    setTokens(p.tokens.filter((t) => t.playerId)); setName(p.name); setNotes(p.notes); setActiveId(p.id);
+    setTokens(p.tokens.filter((t) => t.playerId).map((t) => ({ ...t, home: homeOf(t) }))); setName(p.name); setNotes(p.notes); setActiveId(p.id);
     setSystem(p.system ?? "5:1"); setRotation(p.rotation ?? 1);
   };
   const reset = () => { setTokens([]); setName(""); setNotes(""); setActiveId(null); setRotation(1); };
@@ -118,37 +109,21 @@ function Taktik() {
           <button key={k} className={`chip ${system === k ? "chip-on" : ""}`} onClick={() => setSystem(k)}>{s.label}</button>
         ))}
       </div>
-      <p className="mt-2 text-sm text-muted-foreground">{SYSTEMS[system]?.info} Ziehe die Spieler von der Bank auf die Positionen.</p>
+      <p className="mt-2 text-sm text-muted-foreground">{SYSTEMS[system]?.info}</p>
 
       <div className="mt-3 flex items-center justify-between">
         <span className="font-display text-2xl">Rotation {rotation}</span>
         <div className="flex gap-2">
           <button className="chip" onClick={rotate}>Rotieren ↻</button>
+          {full && <button className="chip" onClick={toBase}>Grundposition</button>}
           <button className="chip" onClick={reset}>Leeren</button>
         </div>
       </div>
 
-      <div ref={court} className="relative mx-auto mt-2 aspect-square max-h-[60vh] touch-none select-none rounded-md border-4 border-t-0 border-court-line bg-court">
-        <div className="absolute inset-x-0 top-0 h-2 bg-court-line" aria-label="Netz" />
-        <div className="absolute inset-x-0 top-1/2 h-0.5 bg-court-line/70" />
-        {POS.map(([x, y], i) => (
-          <div key={i} style={{ left: `${x}%`, top: `${y}%` }} className="pointer-events-none absolute flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border-2 border-dashed border-court-line/80 text-court-line">
-            <span className="font-display text-lg leading-none">{roles[i]}</span>
-            <span className="text-[10px]">{POS_NAME[i]}</span>
-          </div>
-        ))}
-        {tokens.map((k) => {
-          const p = players.find((x) => x.id === k.playerId);
-          if (!p) return null;
-          return (
-            <div key={k.id} onPointerDown={startDrag(p)} style={{ left: `${k.x}%`, top: `${k.y}%` }}
-              className="absolute flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 cursor-grab flex-col items-center justify-center rounded-full border-2 border-court-line bg-primary text-primary-foreground shadow-lg">
-              <span className="font-display text-xl leading-none">{p.number}</span>
-              <span className="max-w-11 truncate text-[9px]">{p.name}</span>
-            </div>
-          );
-        })}
-      </div>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {full ? "Alle stehen – jetzt frei verschieben, um die Annahmeposition festzulegen. Gestrichelte Linien zeigen die eigentliche Position." : `Ziehe ${6 - tokens.length} weitere Spieler auf die Positionen.`}
+      </p>
+      <div className="mt-2"><Court innerRef={court} tokens={tokens} players={players} roles={roles} onTokenDown={startDrag} /></div>
 
       <h2 className="mt-3 text-xl">Bank</h2>
       <div className="mt-1 flex min-h-14 flex-wrap gap-2 rounded-xl border border-dashed border-border p-2">
@@ -164,7 +139,10 @@ function Taktik() {
       <div className="mt-3 grid gap-2 rounded-xl border border-border bg-card p-4">
         <input className="field" placeholder="Name des Spielzugs" value={name} onChange={(e) => setName(e.target.value)} />
         <textarea className="field min-h-24" placeholder="Notizen: Laufwege, Zuspiel, Absprachen…" value={notes} onChange={(e) => setNotes(e.target.value)} />
-        <button className="btn" onClick={save}>{activeId ? "Änderungen speichern" : "Aufstellung speichern"}</button>
+        <div className="flex flex-wrap gap-2">
+          <button className="btn flex-1" onClick={() => save()}>{activeId ? "Änderungen speichern" : "Aufstellung speichern"}</button>
+          {activeId && <button className="chip flex-1" onClick={() => save(true)}>Als neue Aufstellung speichern</button>}
+        </div>
       </div>
 
       <h2 className="mt-6 text-3xl">Gespeicherte Aufstellungen</h2>
