@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Archivo Black", sans-serif;
-  --font-sans: "Space Grotesk", sans-serif;
+  --font-display: "Manrope", sans-serif;
+  --font-sans: "Manrope", sans-serif;
   --font-mono: "Space Mono", monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -37,31 +37,31 @@
 }
 
 :root {
-  --radius: 0.125rem;
-  --background: oklch(0.96 0.01 95);
+  --radius: 0.5rem;
+  --background: oklch(0.98 0.003 250);
   --foreground: oklch(0.24 0.06 252);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.24 0.06 252);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.24 0.06 252);
-  --primary: oklch(0.33 0.09 252);
+  --primary: #043864;
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.95 0.012 250);
   --secondary-foreground: oklch(0.3 0.07 252);
   --muted: oklch(0.96 0.008 250);
   --muted-foreground: oklch(0.52 0.03 252);
-  --accent: oklch(0.8 0.17 75);
+  --accent: oklch(0.94 0.025 245);
   --accent-foreground: oklch(0.24 0.06 252);
   --destructive: oklch(0.6 0.21 25);
   --destructive-foreground: oklch(0.99 0 0);
   --success: oklch(0.65 0.15 160);
-  --court: oklch(0.47 0.09 245);
+  --court: #235d8d;
   --court-line: oklch(0.99 0 0);
-  --border: oklch(0.24 0.06 252);
+  --border: oklch(0.89 0.012 250);
   --input: oklch(0.89 0.015 250);
   --ring: oklch(0.47 0.09 245);
-  --shadow-card: 5px 5px 0 0 var(--foreground);
-  --shadow-hard-sm: 3px 3px 0 0 var(--foreground);
+  --shadow-card: 0 3px 14px color-mix(in oklab, var(--primary) 5%, transparent);
+  --shadow-hard-sm: 0 1px 3px color-mix(in oklab, var(--primary) 6%, transparent);
 }
 
 @layer base {
@@ -70,34 +70,43 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    background-image: linear-gradient(var(--input) 1px, transparent 1px), linear-gradient(90deg, var(--input) 1px, transparent 1px);
-    background-size: 28px 28px;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3 { font-family: var(--font-display); font-weight: 400; text-transform: uppercase; letter-spacing: -0.01em; }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 800; letter-spacing: 0; }
+  h1 { font-size: 2rem; line-height: 1.2; }
+  h2 { font-size: 1.375rem; line-height: 1.4; }
+  button, input, select { font: inherit; }
+  input, select { min-width: 0; }
+  summary { cursor: pointer; }
 }
 
-/* Brutalist: harte Kanten, dicke Linien, Versatzschatten */
-.border { border-width: 2px; }
-.bg-card { box-shadow: var(--shadow-card); }
-.tracking-widest { font-family: var(--font-mono); }
-nav.fixed { border-top-width: 3px; box-shadow: none; }
+/* Shared club interface: quiet surfaces and clear blue selection states. */
+.rounded-xl { border-radius: var(--radius); }
+.bg-card { box-shadow: none; }
+.tracking-widest { letter-spacing: 0.12em; }
+.page-heading { font-size: 2rem; line-height: 1.2; }
+.section-heading { font-size: 1.375rem; }
+.club-settings[open] summary { margin-bottom: 1rem; }
+.roster-list > li { box-shadow: var(--shadow-card); }
+.roster-list > li:hover { border-color: var(--primary); }
+.app-bottom-nav { padding-bottom: env(safe-area-inset-bottom); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
 
 @utility chip {
-  @apply border-2 border-border bg-card px-3 py-2 text-sm font-bold transition active:translate-x-0.5 active:translate-y-0.5 disabled:opacity-40;
+  @apply border border-border bg-card px-3 py-2 text-sm font-semibold transition-colors hover:bg-accent disabled:opacity-40;
   border-radius: var(--radius);
-  box-shadow: var(--shadow-hard-sm);
-  &:active { box-shadow: none; }
 }
 @utility chip-on {
-  @apply bg-primary text-primary-foreground;
+  @apply border-primary bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground;
 }
 @utility field {
-  @apply w-full border-2 border-border bg-card px-3 py-2.5 font-medium text-foreground outline-none focus:bg-accent/20;
+  @apply w-full border border-input bg-card px-3 py-2.5 text-sm font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/15;
   border-radius: var(--radius);
 }
 @utility btn {
-  @apply border-2 border-border bg-primary px-4 py-2.5 font-bold uppercase tracking-wide text-primary-foreground transition active:translate-x-0.5 active:translate-y-0.5 disabled:opacity-40;
+  @apply border border-primary bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 hover:text-primary-foreground disabled:opacity-40;
   border-radius: var(--radius);
-  box-shadow: var(--shadow-hard-sm);
-  &:active { box-shadow: none; }
 }

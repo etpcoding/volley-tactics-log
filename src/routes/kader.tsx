@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, Plus, Settings2, Download, Upload, Users } from "lucide-react";
 import { useStored, write, uid, EMPTY_CLUB, defaultSeason, type Club, POSITIONS, EMPTY_PLAYERS, EMPTY_MATCH, EMPTY_HISTORY, allMatches, teamPlayers, type Player, type Match } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { playerStats } from "@/lib/stats";
@@ -69,14 +69,23 @@ function Kader() {
 
   return (
     <div>
-      <div className="rounded-xl border border-border bg-card p-4">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div><p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{club.name || "VC 94 Haslach"} · {season}</p><h1 className="page-heading mt-2">{viewTeam ? `${viewTeam} · Kader` : "Kader"}</h1></div>
+        <span className="mt-2 flex items-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-semibold text-primary"><Users className="h-4 w-4" />{visible.length} Spieler</span>
+      </div>
+      <details className="club-settings mb-5 border-b border-border pb-4">
+        <summary className="flex list-none items-center gap-2 text-sm font-semibold text-primary"><Settings2 className="h-4 w-4" />Verein & Teams</summary>
+      <div className="grid gap-x-6 sm:grid-cols-2">
+      <div>
         <p className="mb-1 text-sm font-semibold text-muted-foreground">Verein</p>
         <input className="field" placeholder="Vereinsname" value={club.name} onChange={(e) => setClub({ ...club, name: e.target.value })} />
         <div className="mt-2 flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Aktuelle Saison</span>
           <input className="field w-28" value={season} onChange={(e) => setClub({ ...club, season: e.target.value })} />
         </div>
-        <p className="mt-3 mb-1 text-sm font-semibold text-muted-foreground">Teams</p>
+      </div>
+      <div>
+        <p className="mb-1 text-sm font-semibold text-muted-foreground">Teams</p>
         <div className="flex flex-wrap gap-2">
           {club.teams.map((t) => (
             <Button variant="ghost" key={t} className="chip" aria-label={`Team ${t} entfernen`} onClick={() => removeTeam(t)}>{t} ✕</Button>
@@ -84,11 +93,12 @@ function Kader() {
         </div>
         <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); const t = teamName.trim(); if (t && !club.teams.includes(t)) setClub({ ...club, teams: [...club.teams, t] }); setTeamName(""); }}>
           <input className="field" placeholder="z. B. Herren 1, Damen 2" value={teamName} onChange={(e) => setTeamName(e.target.value)} />
-          <Button variant="ghost" className="btn" disabled={!teamName.trim()}>+</Button>
+          <Button aria-label="Team hinzufügen" className="shrink-0" disabled={!teamName.trim()}><Plus className="h-4 w-4" /></Button>
         </form>
       </div>
+      </div>
+      </details>
 
-      <h1 className="mt-6 break-words text-5xl">{viewTeam ?? (club.name || "")}{viewTeam || club.name ? " – " : ""}Kader <span className="text-primary">{visible.length}</span></h1>
       {club.teams.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-2">
           {club.teams.map((t) => (
@@ -104,27 +114,29 @@ function Kader() {
           <Button variant="ghost" key={s} className={`chip ${seasonFilter === s ? "chip-on" : ""}`} onClick={() => setSeasonFilter(s)}>{s === "alle" ? "Alle Saisons" : s}</Button>
         ))}
       </div>
-      <form onSubmit={add} className="mt-4 grid gap-2 rounded-xl border border-border bg-card p-4">
+       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+       <form onSubmit={add} className="grid gap-3 border-t border-border pt-5 lg:col-start-2 lg:row-start-1">
+         <h2 className="section-heading">Neuer Spieler</h2>
         <div className="flex gap-2">
-          <input className="field w-20" placeholder="Nr." inputMode="numeric" value={number} onChange={(e) => setNumber(e.target.value)} />
-          <input className="field" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+           <input aria-label="Trikotnummer" className="field w-20 shrink-0" placeholder="Nr." inputMode="numeric" value={number} onChange={(e) => setNumber(e.target.value)} />
+           <input aria-label="Spielername" className="field" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
         <div className="flex flex-wrap gap-2">
           {POSITIONS.map((p) => (
             <Button variant="ghost" type="button" key={p} onClick={() => setPosition(p)} className={`chip ${position === p ? "chip-on" : ""}`}>{p}</Button>
           ))}
         </div>
-        <Button variant="ghost" className="btn" disabled={!name.trim()}>Spieler hinzufügen{viewTeam ? ` zu ${viewTeam}` : ""}</Button>
+         <Button className="h-auto min-h-10 whitespace-normal" disabled={!name.trim()}><Plus className="h-4 w-4 shrink-0" />Spieler hinzufügen{viewTeam ? ` zu ${viewTeam}` : ""}</Button>
       </form>
-      <ul className="mt-4 grid gap-2">
-        {sorted.length === 0 && <p className="text-center text-muted-foreground">{viewTeam ? `Noch keine Spieler in ${viewTeam}.` : "Noch keine Spieler im Kader."}</p>}
+       <ul className="roster-list grid gap-3 lg:col-start-1 lg:row-start-1">
+         {sorted.length === 0 && <li className="flex min-h-48 flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground"><Users className="h-8 w-8 text-primary/50" />{viewTeam ? `Noch keine Spieler in ${viewTeam}.` : "Noch keine Spieler im Kader."}</li>}
         {sorted.map((p) => {
           const s = stats.find((x) => x.p.id === p.id);
           return (
           <li key={p.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary font-display text-2xl text-primary-foreground">{p.number}</span>
+             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-accent font-display text-xl font-extrabold text-primary">{p.number}</span>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold">{p.name}</p>
+               <p className="break-words font-bold">{p.name}</p>
               <p className="text-sm text-muted-foreground">{p.position}</p>
               {club.teams.length > 0 && (
                 <select aria-label={`Team von ${p.name}`} className="field mt-1 h-8 py-0 text-sm" value={p.team && club.teams.includes(p.team) ? p.team : ""}
@@ -151,8 +163,9 @@ function Kader() {
           );
         })}
       </ul>
+       </div>
 
-      <h2 className="mt-6 text-3xl">Spieltage-Archiv</h2>
+       <h2 className="section-heading mt-9 border-t border-border pt-6">Spieltage-Archiv</h2>
       {seasons.map((s) => {
         const list = history.filter((m) => (m.season ?? season) === s);
         if (!list.length) return null;
@@ -174,11 +187,11 @@ function Kader() {
       })}
       {history.length === 0 && <p className="mt-2 text-muted-foreground">Noch keine beendeten Spiele.</p>}
 
-      <div className="mt-6 grid gap-2 rounded-xl border border-border bg-card p-4">
-        <p className="text-sm text-muted-foreground">Sichere alle Daten (Verein, Kader, Spiele, Taktik) als Datei, um sie über Jahre aufzubewahren oder auf ein anderes Gerät zu übertragen.</p>
-        <div className="flex gap-2">
-          <Button variant="ghost" className="btn flex-1" onClick={exportData}>Sicherung herunterladen</Button>
-          <label className="chip flex flex-1 cursor-pointer items-center justify-center">Sicherung laden<input type="file" accept="application/json" className="hidden" onChange={(e) => importData(e.target.files?.[0])} /></label>
+       <div className="mt-8 border-t border-border pt-5">
+         <h2 className="mb-3 text-base font-bold">Datensicherung</h2>
+         <div className="flex flex-wrap gap-2">
+           <Button variant="outline" className="h-auto min-h-10 whitespace-normal" onClick={exportData}><Download className="h-4 w-4" />Sicherung herunterladen</Button>
+           <label className="chip flex cursor-pointer items-center justify-center gap-2"><Upload className="h-4 w-4" />Sicherung laden<input type="file" accept="application/json" className="hidden" onChange={(e) => importData(e.target.files?.[0])} /></label>
         </div>
       </div>
     </div>
