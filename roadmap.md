@@ -4,4 +4,4 @@
 - [x] Gemeinsame Cloud-Daten und sichere Eigentümer-/Trainerrechte einrichten.
 - [x] Anmeldung, Profile, Trainerfreigabe und Übernahme bestehender Daten ergänzen.
 - [ ] Synchronisierung und Zugriffsrechte prüfen.
-- [ ] VCH-Farben und moderne Oberfläche für Navigation und Module umsetzen und prüfen.
+- [x] VCH-Farben und moderne Oberfläche für Navigation und Module umsetzen und prüfen.
